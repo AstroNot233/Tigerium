@@ -26,6 +26,8 @@ pub struct Metrics {
     pub sel: f64,
     /// 疲劳值（相邻两键的顺序代价）
     pub fatigue: f64,
+    /// 真实平均码长（按字频加权，不计键权）
+    pub len: f64,
     /// 前 N 高频字没拿一简的罚金（单独列出，便于和「真实费用」区分）
     pub top: f64,
     pub len_hist: [usize; 5],
@@ -204,7 +206,8 @@ impl<'a> Evaluator<'a> {
             st.wsum[i] = 1e12 * self.forced[i] as f64;
             st.wtop[i] = 1e12;
         }
-        let mut phys = 0.0;
+        let mut key_sum = 0.0;
+        let mut len_sum = 0.0;
         let mut fat_sum = 0.0;
         let mut topsum = 0.0;
         // 击键费直接从 phys 得出，无需单独累加
@@ -378,7 +381,8 @@ impl<'a> Evaluator<'a> {
             if self.top2[ci as usize] && (len[best] as usize) > cfg.top_len2 {
                 top_pen += cfg.top_pen2;
             }
-            phys += w * (cost[best] + top_pen);
+            key_sum += w * cost[best];
+            len_sum += w * len[best] as f64;
             fat_sum += w * fat[best];
             topsum += w * top_pen;
 
@@ -399,9 +403,10 @@ impl<'a> Evaluator<'a> {
         }
         self.stats = st;
         Metrics {
-            cost: (phys + sel + cfg.fatigue_weight * fat_sum) / self.total_w,
+            cost: (key_sum + topsum + sel + cfg.fatigue_weight * fat_sum) / self.total_w,
             top: topsum / self.total_w,
-            keys: phys / self.total_w,
+            keys: key_sum / self.total_w,
+            len: len_sum / self.total_w,
             sel: sel / self.total_w,
             fatigue: fat_sum / self.total_w,
             len_hist,

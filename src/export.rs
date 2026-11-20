@@ -91,6 +91,7 @@ pub fn export(data: &Data, ev: &Evaluator, lay: &Layout, dir: &str) -> std::io::
 
     let mut t = File::create(format!("{dir}/metrics.txt"))?;
     writeln!(t, "cost\t{:.6}", m.cost)?;
+    writeln!(t, "avg_len\t{:.6}", m.len)?;
     writeln!(t, "keystroke\t{:.6}", m.keys)?;
     writeln!(t, "select\t{:.6}", m.sel)?;
     writeln!(t, "fatigue\t{:.6}", m.fatigue)?;
@@ -100,11 +101,11 @@ pub fn export(data: &Data, ev: &Evaluator, lay: &Layout, dir: &str) -> std::io::
     writeln!(t, "edge_col_pct\t{:.1}", 100.0 * edge / all_w)?;
     writeln!(t, "col_share\t{:?}", col_w.map(|x| (x / all_w * 1000.0).round() / 10.0))?;
     println!(
-        "费用 {:.4}（按键 {:.4} + 选重 {:.4}），码长 {:.4}，长度分布 {:?}",
+        "费用 {:.4}（击键 {:.4} + 选重 {:.4}），码长 {:.4}，长度分布 {:?}",
         m.cost,
-        m.cost - m.sel,
-        m.sel,
         m.keys,
+        m.sel,
+        m.len,
         &m.len_hist[1..]
     );
     Ok(())

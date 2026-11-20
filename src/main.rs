@@ -174,13 +174,13 @@ fn main() {
                 corpus::eval_file(&ev, &lay, c);
             }
             println!(
-                "费用 {:.6}（击键 {:.6} + 选重 {:.6} + 疲劳 {:.6} + 一简罚 {:.6}），码长 {:.6}，长度分布 {:?}",
+                "费用 {:.6}（击键 {:.6} + 选重 {:.6} + 疲劳 {:.6} + 一简罚 {:.6}），码长 {:.4}，长度分布 {:?}",
                 m.cost,
                 m.keys,
                 m.sel,
                 m.fatigue,
                 m.top,
-                m.keys,
+                m.len,
                 &m.len_hist[1..]
             );
         }
@@ -218,7 +218,7 @@ fn main() {
             for c in &corpora {
                 corpus::eval_file(&ev, &start, c);
             }
-            eprintln!("初值：费用 {:.4} 码长 {:.4}", m0.cost, m0.keys);
+            eprintln!("初值：费用 {:.4} 码长 {:.4}", m0.cost, m0.len);
             // 多轮重升温：每轮从上一轮最优的布局出发，温度重新拉高
             let mut cur = start;
             let mut res = search::anneal(

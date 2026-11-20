@@ -108,7 +108,7 @@ pub fn eval_file(ev: &Evaluator, lay: &Layout, path: &str) {
         return;
     }
     println!(
-        "语料 {}：覆盖 {:.2}%（{}/{} 字），每字 物理 {:.4} + 选重 {:.4} = {:.4}，码长 {:.4}",
+        "语料 {}：覆盖 {:.2}%（{}/{} 字），每字 击键 {:.4} + 选重 {:.4} = {:.4}，码长 {:.4}",
         path,
         100.0 * hit as f64 / freq.len() as f64,
         hit,
