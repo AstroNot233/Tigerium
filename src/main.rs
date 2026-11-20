@@ -156,9 +156,12 @@ fn main() {
         cfg.p1, cfg.p2, cfg.caps, cfg.last_small
     );
     let data = Data::load(&cfg);
-    let forced = data::load_forced(&format!("{data_dir}/forced.tsv"));
+    let forced = match cfg.data.forced.as_deref() {
+        Some(path) => data::load_forced(path),
+        None => Vec::new(),
+    };
     if !forced.is_empty() {
-        eprintln!("强制占位 {} 条", forced.len());
+        eprintln!("强制占位 {} 条（{}）", forced.len(), cfg.data.forced.as_deref().unwrap_or("-"));
     }
     let mut ev = Evaluator::new(&data, &cfg, &forced);
 

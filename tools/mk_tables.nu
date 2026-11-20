@@ -1,6 +1,6 @@
 # 把 out/ 下的机器表渲染成人类可读的三张表：键位表 / 字根表 / 码表
-# 用法： nu tools/mk_tables.nu [out_dir]
-def main [dir = "out"] {
+# 用法： nu tools/mk_tables.nu [out_dir] [forced.tsv]
+def main [dir = "out", forced_file = "data/forced.tsv"] {
   let chars = (open --raw $"($dir)/chars.tsv" | lines | each {|l|
     let f = ($l | split row "\t")
     {c: $f.0, w: ($f.1 | into int), n: ($f.2 | into int), sp: $f.3, code: $f.4, full: $f.5, len: ($f.6 | into int), short: ($f.7 | into int), tr: ($f.8 | into int)}
@@ -18,8 +18,8 @@ def main [dir = "out"] {
 
   # 一简：每个键上只放一个字；有强制占位（标点）时优先显示它
   let one = ($chars | where {|r| $r.len == 1 } | reduce -f {} {|r, a| $a | insert $r.code $r.c })
-  let forced = (if ("data/forced.tsv" | path exists) {
-    open --raw data/forced.tsv | lines | where {|l| ($l | str contains "	") }
+  let forced = (if ($forced_file | path exists) {
+    open --raw $forced_file | lines | where {|l| ($l | str contains "	") }
     | reduce -f {} {|l, a| let f = ($l | split row "	"); $a | insert $f.0 ($f | get 1) }
   } else { {} })
   let one = ($one | merge $forced)
