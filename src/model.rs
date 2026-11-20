@@ -161,15 +161,16 @@ impl<'a> Evaluator<'a> {
         let s0 = s[ids[0] as usize];
         let mut out = vec![(vec![b0], false)];
         if n == 1 {
-            out.push((vec![b0, s0], true));
+            // Aa 是普通一层（受候选上限约束），筛重码才是逻辑全码
+            out.push((vec![b0, s0], false));
             match self.cfg.single_root {
                 crate::config::SingleRoot::Wuli => {
-                    for &w in &self.cfg.wuli {
-                        out.push((vec![b0, s0, w as u8], false));
+                    for (k, &w) in self.cfg.wuli.iter().enumerate() {
+                        out.push((vec![b0, s0, w as u8], k == 0));
                     }
                 }
-                crate::config::SingleRoot::Aaa => out.push((vec![b0, s0, s0], false)),
-                crate::config::SingleRoot::AaAa => out.push((vec![b0, s0, b0, s0], false)),
+                crate::config::SingleRoot::Aaa => out.push((vec![b0, s0, s0], true)),
+                crate::config::SingleRoot::AaAa => out.push((vec![b0, s0, b0, s0], true)),
             }
             return out;
         }
@@ -237,7 +238,11 @@ impl<'a> Evaluator<'a> {
             len[0] = 1;
 
             if n == 1 {
-                full_len = 2;
+                // 逻辑全码 = 筛重码（Aax / Aaa / AaAa），Aa 只是受上限约束的普通一层
+                full_len = match cfg.single_root {
+                    crate::config::SingleRoot::AaAa => 4,
+                    _ => 3,
+                };
                 let k1 = k0 + kb.key_cost[s0];
                 cand[1] = cand2(b0, s0);
                 cost[1] = k1;
