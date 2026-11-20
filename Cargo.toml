@@ -1,6 +1,6 @@
 [package]
 name = "tigerium"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 license = "GPL-3.0-only"
 description = "基于虎码字根的重训练方案：面向非主流布局用户，提供精细的自定义参数调整功能"

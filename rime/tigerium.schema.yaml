@@ -9,7 +9,7 @@
 schema:
   schema_id: tigerium
   name: 钛铬虎码
-  version: "0.2.0"
+  version: "0.2.1"
   author: kay
   description: |
     基于虎码 241 组字根重排的 30 键方案。
