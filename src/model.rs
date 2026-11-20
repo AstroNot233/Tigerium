@@ -331,9 +331,8 @@ impl<'a> Evaluator<'a> {
             for i in first..nopt {
                 let id = cand[i] as usize;
                 let occ = st.count[id] as usize;
-                if len[i] != full_len
-                    && occ.saturating_sub(self.forced[id] as usize) >= cfg.caps[(len[i] - 1) as usize]
-                {
+                // 强制占位也算占用：被标点占住的短码不再接收字
+                if len[i] != full_len && occ >= cfg.caps[(len[i] - 1) as usize] {
                     continue;
                 }
                 let mut cst = cost[i];
