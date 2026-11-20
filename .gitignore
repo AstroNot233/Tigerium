@@ -1,0 +1,42 @@
+# 白名单式忽略：默认全部忽略，只放行代码与国标字表。
+*
+!.gitignore
+!Cargo.toml
+!Cargo.lock
+!.github/
+!.github/workflows/
+!.github/workflows/*.yml
+!LICENSE
+!README.md
+!AGENTS.md
+
+# 代码
+!src/
+!src/**
+
+# 工具脚本
+!tools/
+!tools/mk_tables.nu
+!tools/README.md
+
+# 国标字表（《通用规范汉字表》，国家标准可自由分发）
+!std/
+!std/*.txt
+
+# 配置：只放行带注释的示例，不放行具体方案配置
+!config/
+!config/QWERTY-*.toml
+
+# 数据目录：只放行说明文件，上游数据由用户自行放入
+!data/
+!data/README.md
+
+# 方案 profile：只放行格式说明
+!profiles/
+!profiles/README.md
+
+# Rime：只放行方案外壳，不放行生成的码表
+!rime/
+!rime/*.schema.yaml
+
+# 其余一律忽略（含 layouts/、out/、target/、上游数据、生成的 *.dict.yaml、PDF、7z 等）

@@ -1,0 +1,14 @@
+[package]
+name = "tigerium"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-only"
+description = "基于虎码字根的重训练方案：面向非主流布局用户，提供精细的自定义参数调整功能"
+
+[[bin]]
+name = "tigerium"
+path = "src/main.rs"
+
+[dependencies]
+serde = { version = "1.0.229", features = ["derive"] }
+toml = "0.8"

@@ -1,0 +1,94 @@
+# Rime 方案：钛铬虎码（tigerium）
+# 用法：把本文件与 tigerium.dict.yaml 一起放进 Rime 的用户目录，重新部署后在方案列表里选中它。
+#
+# 关键约定：
+# 1. speller/alphabet 必须与 config/default.toml 的 [alphabet] 完全一致（30 个符号，含 , . / ;）。
+# 2. punctuator 故意不接管 , . / ; —— 这四个键要留给编码，标点由码表里的强制占位条目输出
+#    （打 , 出「，」、. 出「。」、/ 出「、」、; 出「；」）。
+
+schema:
+  schema_id: tigerium
+  name: 钛铬虎码
+  version: "0.1"
+  author: kay
+  description: |
+    基于虎码 241 组字根重排的 30 键方案。
+    一简 26 字 + 4 标点；一级字可用简码，二三级只打全码。
+
+switches:
+  - name: ascii_mode
+    reset: 0
+    states: [中文, 西文]
+
+engine:
+  processors:
+    - ascii_composer
+    - recognizer
+    - key_binder
+    - speller
+    - punctuator
+    - selector
+    - navigator
+    - express_editor
+  segmentors:
+    - ascii_segmentor
+    - matcher
+    - abc_segmentor
+    - punct_segmentor
+    - fallback_segmentor
+  translators:
+    - punct_translator
+    - table_translator
+  filters:
+    - uniquifier
+
+speller:
+  # 与 config/default.toml 的 [alphabet] 一致
+  alphabet: "qwertyuiopasdfghjkl;zxcvbnm,./"
+  initials: "qwertyuiopasdfghjkl;zxcvbnm,./"
+  delimiter: " "
+  max_code_length: 4
+  auto_select: false
+
+translator:
+  dictionary: tigerium
+  enable_completion: false
+  enable_sentence: false
+  enable_user_dict: false
+  initial_quality: 1
+
+# 只接管不需要进 speller 的键；, . / ; 一律留给编码
+punctuator:
+  import_preset: none
+  half_shape:
+    "`": "｀"
+    "-": "-"
+    "=": "="
+    "[": "【"
+    "]": "】"
+    "\\": "、"
+    "'": "'"
+    "<": "《"
+    ">": "》"
+    "?": "？"
+    "!": "！"
+    "@": "@"
+    "#": "#"
+    "$": "¥"
+    "%": "%"
+    "^": "……"
+    "&": "&"
+    "*": "*"
+    "(": "（"
+    ")": "）"
+    "_": "——"
+    "+": "+"
+    "|": "|"
+    "~": "～"
+    ":": "："
+    "\"": "“"
+    "{": "「"
+    "}": "」"
+
+menu:
+  page_size: 5
