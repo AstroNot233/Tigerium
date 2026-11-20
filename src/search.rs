@@ -37,34 +37,7 @@ pub fn letter_to_sym() -> HashMap<char, u8> {
     m
 }
 
-/// 冷启动兜底：根按权重降序轮流落到便宜键上。
-pub fn init_layout(nr: usize, ev: &Evaluator, seed: u64) -> Layout {
-    let mut rng = Rng::new(seed);
-    let mut keys: Vec<usize> = (0..NSYM).filter(|&k| ev.kb.key_cost[k].is_finite()).collect();
-    let key_cost: Vec<f64> = (0..NSYM).map(|k| ev.kb.key_cost[k]).collect();
-    keys.sort_by(|&a, &b| key_cost[a].partial_cmp(&key_cost[b]).unwrap());
-
-    let mut roots: Vec<usize> = (0..nr).collect();
-    roots.sort_by(|&a, &b| root_weight(ev, b).partial_cmp(&root_weight(ev, a)).unwrap());
-    let mut lay = Layout::new(nr);
-    let nk = keys.len();
-    for (i, &r) in roots.iter().enumerate() {
-        lay.b[r] = keys[i % nk] as u8;
-        lay.s[r] = keys[(i / nk + rng.below(nk)) % nk] as u8;
-    }
-    lay
-}
-
-fn root_weight(ev: &Evaluator, r: usize) -> f64 {
-    ev.data
-        .chars
-        .iter()
-        .filter(|c| c.ids.contains(&(r as u16)))
-        .map(|c| c.weight)
-        .sum()
-}
-
-/// 官方布局：241 组根的码对（`data/roots.tsv` 第二列）按物理位置映到 30 键。
+/// 上游布局：根表的码对（`roots.tsv` 第二列）按物理位置映到 30 键。
 pub fn official_layout(data: &crate::data::Data, cfg: &crate::config::Config) -> Layout {
     let pos = letter_to_sym();
     let nr = data.roots.len();

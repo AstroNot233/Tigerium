@@ -1,4 +1,4 @@
-//! Tigerium —— 基于虎码字根的重训练方案。
+//! Tigerium —— 基于字根的重排训练器。
 //!
 //! 用法：
 //! ```text
@@ -16,7 +16,6 @@ mod data;
 mod ergo;
 mod export;
 mod fatigue;
-mod extract;
 mod keyboard;
 mod model;
 mod search;
@@ -27,7 +26,7 @@ use model::Evaluator;
 
 fn usage() {
     println!(
-        r#"Tigerium · 钛铬虎码
+        r#"Tigerium · 钛铬利按
 
 用法： tigerium <子命令> [选项]
 
@@ -37,7 +36,6 @@ fn usage() {
   export          出表（chars/keymap/roots/metrics，可选写出 Rime 码表）
   ergo            人体工学统计
   compare         与上游原方案在同口径下对比
-  extract-roots   从 pdftotext 的输出里抽字根表
 
 常用选项：
   --config <文件>   配置文件，可重复给出，后面的覆盖前面的
@@ -52,7 +50,7 @@ fn usage() {
   --p1/--p2 <数>    选重罚（覆盖配置）
   --caps <a,b,c,d>  分级候选上限（覆盖配置）
   --min-weight <数> 参与重排的权重下限
-  --data <路径>     extract-roots 的输入文本 / 其他子命令的数据目录
+  --data <路径>     数据目录（默认 data）
 
 示例：
   tigerium optimize --config config/QWERTY-30.toml --steps 400000 --seed 1 --out out
@@ -81,7 +79,7 @@ fn main() {
     let mut i = 1;
     while i < args.len() {
         match args[i].as_str() {
-            "optimize" | "score" | "export" | "extract-roots" | "compare" | "ergo" => {
+            "optimize" | "score" | "export" | "compare" | "ergo" => {
                 cmd = args[i].clone();
                 i += 1;
             }
@@ -151,11 +149,6 @@ fn main() {
         }
     }
 
-    if cmd == "extract-roots" {
-        // 复用 --data（输入文本）与 --out（输出文件）两个参数
-        extract::run(&data_dir, &out_dir).unwrap();
-        return;
-    }
 
     println!(
         "Tigerium：data={data_dir} config={:?} 参数 p1={} p2={} caps={:?} last_small={}",
@@ -197,7 +190,7 @@ fn main() {
             ev.evaluate(&lay);
             let e = ergo::measure(&data, &ev);
             let o2 = ergo::measure_official(&data, &format!("{data_dir}/原码编码.yaml"));
-            println!("虎码官方：左右互击 {:.2}%｜同指大跨排 {:.2}%｜同指小跨排 {:.2}%｜小指干扰 {:.2}%｜错手 {:.2}%｜三连击 {:.2}%", o2.alt, o2.same_big, o2.same_small, o2.pinky, o2.wrong, o2.triple);
+            println!("上游：左右互击 {:.2}%｜同指大跨排 {:.2}%｜同指小跨排 {:.2}%｜小指干扰 {:.2}%｜错手 {:.2}%｜三连击 {:.2}%", o2.alt, o2.same_big, o2.same_small, o2.pinky, o2.wrong, o2.triple);
             println!("码内相邻转移 (字频加权) 共 {:.0} 次", e.bigrams);
             println!("左右互击 {:.2}%｜同指大跨排 {:.2}%｜同指小跨排 {:.2}%", e.alt, e.same_big, e.same_small);
             println!("小指干扰 {:.2}%｜错手 {:.2}%｜三连击 {:.2}%", e.pinky, e.wrong, e.triple);

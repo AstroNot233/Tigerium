@@ -201,7 +201,7 @@ pub fn run(data: &Data, ev: &mut Evaluator, lay: &Layout, corpora: &[String], da
     println!("\n| 范围 | 方案 | 字数 | 码位 | 重码码位 | 重码字 | 重码频次 | 码长 | 带选码长 |");
     println!("| --- | --- | --- | --- | --- | --- | --- | --- | --- |");
     for (a, b) in &table {
-        for (r, name) in [(a, "Tigerium"), (b, "虎码")] {
+        for (r, name) in [(a, "Tigerium"), (b, "上游")] {
             println!(
                 "| {} | {} | {} | {} | {} | {} | {:.1}% | {:.4} | {:.4} |",
                 r.scope,

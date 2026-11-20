@@ -86,7 +86,7 @@ pub fn measure(data: &Data, ev: &Evaluator) -> Ergo {
     }
 }
 
-/// 官方虎码：字母码 → QWERTY 物理位置后，用同一套规则统计。
+/// 上游码：字母码 → QWERTY 物理位置后，用同一套规则统计。
 pub fn measure_official(data: &Data, path: &str) -> Ergo {
     use std::collections::HashMap;
     let mut codes: HashMap<char, String> = HashMap::new();

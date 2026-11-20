@@ -23,10 +23,6 @@ pub struct Root {
 pub struct Data {
     pub chars: Vec<Char>,
     pub roots: Vec<Root>,
-    /// 官方码表里每个字的全码（用于推官方布局与基线对照）
-    pub official: HashMap<char, Vec<String>>,
-    /// 未能归入 241 组的拆分字形（应为空）
-    pub unresolved: Vec<char>,
 }
 
 fn read_opt(path: &str) -> String {
@@ -97,8 +93,6 @@ impl Data {
         Data {
             chars,
             roots,
-            official: full_codes,
-            unresolved,
         }
     }
 }
@@ -189,7 +183,7 @@ fn load_charset(path: &str) -> Vec<char> {
         .collect()
 }
 
-/// 把 1096 个拆分字形并到 241 个根上。证据顺序：官方字形 → NFKC 归一化 →
+/// 把拆分字形并到根上。证据顺序：上游字形 → NFKC 归一化 →
 /// 「码 ↔ 拆分」反推码对 → 人工校正。返回 字形 → 根 id。
 fn group_glyphs(
     roots: &[Root],

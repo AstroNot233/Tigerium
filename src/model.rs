@@ -17,18 +17,6 @@ impl Layout {
             s: vec![0; n],
         }
     }
-    pub fn pair_ok(&self, keep: &mut [u16; NSYM * NSYM]) -> bool {
-        keep.iter_mut().for_each(|x| *x = 0);
-        let mut ok = true;
-        for r in 0..self.b.len() {
-            let i = self.b[r] as usize * NSYM + self.s[r] as usize;
-            keep[i] += 1;
-            if keep[i] > 1 {
-                ok = false;
-            }
-        }
-        ok
-    }
 }
 
 pub struct Metrics {

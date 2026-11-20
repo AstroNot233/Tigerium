@@ -32,7 +32,7 @@ def main [dir = "out"] {
   })
 
   let header = [
-    "虎码 30 键 · 键位表"
+    "Tigerium · 键位表"
     $"生成自 ($dir)，共 ($keys | length) 键 / ($roots | length) 组根"
     ""
     $"上排  ($top | get 0)"
@@ -46,11 +46,11 @@ def main [dir = "out"] {
   let detail = ($keys | sort-by k | each {|x| $"($x.sym)\t($x.roots)" })
   $detail | save --append $"($dir)/键位表.txt"
 
-  let rootlines = (["虎码 30 键 · 字根表" $"根 ($roots | length) 组；码对列为新方案，原码列为虎码官方码" ""]
+  let rootlines = (["Tigerium · 字根表" $"根 ($roots | length) 组；码对列为新方案，原码列为上游码" ""]
     | append ($roots | sort-by w --reverse | each {|r| $"($r.code)\t($r.old)\t($r.w)\t($r.glyphs)" }))
   $rootlines | save --force $"($dir)/字根表.txt"
 
-  let codelines = (["虎码 30 键 · 码表"
+  let codelines = (["Tigerium · 码表"
     "格式：字<	>码<	>权<	>码长"
     ""]
     | append ($chars | where {|r| $r.tr == 1 } | sort-by w --reverse | each {|r| $"($r.c)\t($r.code)\t($r.w)\t($r.len)" }))
