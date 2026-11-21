@@ -216,6 +216,7 @@ pub fn anneal_parallel(
     seed: u64,
     threads: usize,
     moves: [f64; 6],
+    kick: usize,
 ) -> AnnealResult {
     if threads <= 1 {
         let mut ev = Evaluator::new(data, cfg, forced);
@@ -227,7 +228,12 @@ pub fn anneal_parallel(
                 scope.spawn(move || {
                     let mut ev = Evaluator::new(data, cfg, forced);
                     let iseed = seed.wrapping_add(i as u64 * 7919);
-                    let r = anneal(&mut ev, start.clone(), steps, t0, t1, iseed, moves);
+                    let mut s0 = start.clone();
+                    // 岛 0 保持原起点，其余岛先随机踢几脚，增加起点多样性
+                    if i > 0 && kick > 0 {
+                        kick_layout(&mut s0, ev.kb.key_cost.iter().enumerate().filter(|(_, c)| c.is_finite()).map(|(k, _)| k).collect(), kick, iseed);
+                    }
+                    let r = anneal(&mut ev, s0, steps, t0, t1, iseed, moves);
                     eprintln!("  岛 {i}（seed {iseed}）: {:.6}", r.best_cost);
                     r
                 })
@@ -239,4 +245,18 @@ pub fn anneal_parallel(
         .into_iter()
         .min_by(|a, b| a.best_cost.partial_cmp(&b.best_cost).unwrap())
         .unwrap()
+}
+
+/// 随机踢几脚：随机挑根、随机换到可用键上，用于岛屿的起点多样化。
+fn kick_layout(lay: &mut Layout, keys: Vec<usize>, steps: usize, seed: u64) {
+    if keys.len() < 2 {
+        return;
+    }
+    let mut rng = Rng::new(seed ^ 0x5DEE_CE66_D1CE_u64);
+    let nk = keys.len();
+    for _ in 0..steps {
+        let r = rng.below(lay.b.len());
+        lay.b[r] = keys[rng.below(nk)] as u8;
+        lay.s[r] = keys[rng.below(nk)] as u8;
+    }
 }

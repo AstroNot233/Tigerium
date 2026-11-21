@@ -29,6 +29,10 @@ pub struct Config {
     pub min_weight: f64,
     /// 简码资格：1 = 只有一级字，2 = 一二级，3 = 一二三级
     pub short_levels: usize,
+    /// 前 dup_n 高频字之间不许撞码（0 = 关闭）
+    pub dup_n: usize,
+    /// 撞码罚金倍率：罚金 = dup_pen × 涉及的高频字权重之和
+    pub dup_pen: f64,
     /// 第一层软约束：前 N 高频字的码长不得超过 top_len，否则按字频罚 top_pen
     pub top_n: usize,
     pub top_len: usize,
@@ -50,6 +54,8 @@ pub struct Config {
     pub rounds: usize,
     /// 每轮并行跑几条独立链（取最优）；1 = 单线程
     pub threads: usize,
+    /// 非零号岛在开跑前随机扰动的步数（起点多样化）；0 = 所有岛同起点
+    pub island_kick: usize,
     pub seed: u64,
 }
 
@@ -89,6 +95,8 @@ impl Default for Config {
             single_root: SingleRoot::Wuli,
             min_weight: 1.0,
             short_levels: 1,
+            dup_n: 0,
+            dup_pen: 0.0,
             top_n: 0,
             top_len: 1,
             top_pen: 1.0,
@@ -104,6 +112,7 @@ impl Default for Config {
             steps: 400_000,
             rounds: 1,
             threads: 8,
+            island_kick: 0,
             seed: 1,
         }
     }
@@ -296,6 +305,8 @@ struct RawCode {
 struct RawTraining {
     min_weight: Option<f64>,
     short_levels: Option<usize>,
+    dup_n: Option<usize>,
+    dup_pen: Option<f64>,
     top_n: Option<usize>,
     top_len: Option<usize>,
     top_pen: Option<f64>,
@@ -329,6 +340,8 @@ struct RawSearch {
     t1: Option<f64>,
     steps: Option<usize>,
     rounds: Option<usize>,
+    threads: Option<usize>,
+    island_kick: Option<usize>,
     seed: Option<u64>,
 }
 
@@ -434,6 +447,8 @@ impl Raw {
         if let Some(x) = &self.training {
             if let Some(v) = x.min_weight { c.min_weight = v; }
             if let Some(v) = x.short_levels { c.short_levels = v; }
+            if let Some(v) = x.dup_n { c.dup_n = v; }
+            if let Some(v) = x.dup_pen { c.dup_pen = v; }
             if let Some(v) = x.top_n { c.top_n = v; }
             if let Some(v) = x.top_len { c.top_len = v; }
             if let Some(v) = x.top_pen { c.top_pen = v; }
@@ -462,6 +477,8 @@ impl Raw {
             if let Some(v) = x.t1 { c.t1 = v; }
             if let Some(v) = x.steps { c.steps = v; }
             if let Some(v) = x.rounds { c.rounds = v; }
+            if let Some(v) = x.threads { c.threads = v.max(1); }
+            if let Some(v) = x.island_kick { c.island_kick = v; }
             if let Some(v) = x.seed { c.seed = v; }
         }
         if let Some(x) = &self.data {

@@ -95,6 +95,7 @@ pub fn export(data: &Data, ev: &Evaluator, lay: &Layout, dir: &str) -> std::io::
     writeln!(t, "keystroke\t{:.6}", m.keys)?;
     writeln!(t, "select\t{:.6}", m.sel)?;
     writeln!(t, "fatigue\t{:.6}", m.fatigue)?;
+    writeln!(t, "dup_pen\t{:.6}", m.dup)?;
     writeln!(t, "keys\t{:.6}", m.keys)?;
     writeln!(t, "sel\t{:.6}", m.sel)?;
     writeln!(t, "len\t{:?}", &m.len_hist[1..])?;

@@ -28,6 +28,8 @@ pub struct Metrics {
     pub fatigue: f64,
     /// 真实平均码长（按字频加权，不计键权）
     pub len: f64,
+    /// 前 dup_n 高频字互相撞码的罚金
+    pub dup: f64,
     /// 前 N 高频字没拿一简的罚金（单独列出，便于和「真实费用」区分）
     pub top: f64,
     pub len_hist: [usize; 5],
@@ -40,6 +42,10 @@ struct CodeStats {
     wsum: Vec<f64>,
     s1: Vec<f64>,
     m2: Vec<f64>,
+    /// 落在该码位上的「前 dup_n 高频字」个数
+    ntop: Vec<u16>,
+    /// 这些高频字的权重之和
+    ntop_w: Vec<f64>,
     touched: Vec<u32>,
 }
 
@@ -51,6 +57,8 @@ impl CodeStats {
             wsum: vec![0.0; NCODE],
             s1: vec![0.0; NCODE],
             m2: vec![0.0; NCODE],
+            ntop: vec![0; NCODE],
+            ntop_w: vec![0.0; NCODE],
             touched: Vec::with_capacity(8192),
         }
     }
@@ -62,6 +70,8 @@ impl CodeStats {
             self.wsum[i] = 0.0;
             self.s1[i] = 0.0;
             self.m2[i] = 0.0;
+            self.ntop[i] = 0;
+            self.ntop_w[i] = 0.0;
         }
         self.touched.clear();
     }
@@ -93,6 +103,8 @@ pub struct Evaluator<'a> {
     top: Vec<bool>,
     /// 每个码位被强制占用的个数（放行 caps 检查用）
     forced: Vec<u16>,
+    /// 前 dup_n 高频字（互相撞码要罚分）
+    dup_top: Vec<bool>,
     /// 强制占位表原样保留，导出时要写进码表
     pub forced_list: Vec<crate::data::Forced>,
     /// 被强制占用的码位（预计算，避免每次评估都扫全表）
@@ -122,6 +134,11 @@ impl<'a> Evaluator<'a> {
         for k in 0..cfg.top_n2.min(by_weight.len()) {
             top2[by_weight[k] as usize] = true;
         }
+        // 前 dup_n 高频字：彼此撞码要罚分（0 = 关闭）
+        let mut dup_top = vec![false; data.chars.len()];
+        for k in 0..cfg.dup_n.min(by_weight.len()) {
+            dup_top[by_weight[k] as usize] = true;
+        }
 
         // 强制占位：把 (码, 输出) 预先占住对应码位的首选手
         let mut forced = vec![0u16; NCODE];
@@ -147,6 +164,7 @@ impl<'a> Evaluator<'a> {
             lens: vec![0; data.chars.len()],
             top: top,
             top2: top2,
+            dup_top: dup_top,
             forced_ids: forced.iter().enumerate().filter(|(_, &n)| n > 0).map(|(i, _)| i as u32).collect(),
             forced: forced,
             forced_list: forced_list.to_vec(),
@@ -378,6 +396,10 @@ impl<'a> Evaluator<'a> {
             st.wsum[id] += w;
             st.s1[id] += w * p;
             st.m2[id] += w * w * p;
+            if self.dup_top[ci as usize] {
+                st.ntop[id] += 1;
+                st.ntop_w[id] += w;
+            }
 
             // 前 N 高频字没拿到一简：按字频加权罚 top_pen
             let mut top_pen = 0.0;
@@ -398,6 +420,7 @@ impl<'a> Evaluator<'a> {
         }
 
         let mut sel = 0.0;
+        let mut dup = 0.0;
         for &t in &st.touched {
             let i = t as usize;
             if st.count[i] >= 2 && st.wsum[i] > 0.0 {
@@ -406,12 +429,18 @@ impl<'a> Evaluator<'a> {
                 let wt = st.wtop[i];
                 sel += wt * cfg.p1 * (1.0 - wt / st.wsum[i]);
             }
+            // 前 dup_n 高频字互相撞码：每个涉及的字的权重都计入罚金
+            if st.ntop[i] >= 2 {
+                dup += st.ntop_w[i];
+            }
         }
+        dup *= cfg.dup_pen;
         Metrics {
-            cost: (key_sum + topsum + sel + cfg.fatigue_weight * fat_sum) / self.total_w,
+            cost: (key_sum + topsum + sel + dup + cfg.fatigue_weight * fat_sum) / self.total_w,
             top: topsum / self.total_w,
             keys: key_sum / self.total_w,
             len: len_sum / self.total_w,
+            dup: dup / self.total_w,
             sel: sel / self.total_w,
             fatigue: fat_sum / self.total_w,
             len_hist,

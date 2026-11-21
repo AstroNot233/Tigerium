@@ -180,11 +180,12 @@ fn main() {
                 corpus::eval_file(&ev, &lay, c);
             }
             println!(
-                "费用 {:.6}（击键 {:.6} + 选重 {:.6} + 疲劳 {:.6} + 一简罚 {:.6}），码长 {:.4}，长度分布 {:?}",
+                "费用 {:.6}（击键 {:.6} + 选重 {:.6} + 疲劳 {:.6} + 撞码罚 {:.6} + 一简罚 {:.6}），码长 {:.4}，长度分布 {:?}",
                 m.cost,
                 m.keys,
                 m.sel,
                 m.fatigue,
+                m.dup,
                 m.top,
                 m.len,
                 &m.len_hist[1..]
@@ -237,6 +238,7 @@ fn main() {
                 cfg.seed,
                 cfg.threads,
                 cfg.moves,
+                cfg.island_kick,
             );
             for r in 1..cfg.rounds {
                 eprintln!("第 {r} 轮重升温（起点 {:.4}）", res.best_cost);
@@ -251,6 +253,7 @@ fn main() {
                     cfg.seed + (r as u64) * (cfg.threads.max(1) as u64) * 7919,
                     cfg.threads,
                     cfg.moves,
+                    cfg.island_kick,
                 );
                 if again.best_cost < res.best_cost {
                     res = again;
