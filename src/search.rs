@@ -226,7 +226,10 @@ pub fn anneal_parallel(
             .map(|i| {
                 scope.spawn(move || {
                     let mut ev = Evaluator::new(data, cfg, forced);
-                    anneal(&mut ev, start.clone(), steps, t0, t1, seed + i as u64 * 7919, moves)
+                    let iseed = seed.wrapping_add(i as u64 * 7919);
+                    let r = anneal(&mut ev, start.clone(), steps, t0, t1, iseed, moves);
+                    eprintln!("  岛 {i}（seed {iseed}）: {:.6}", r.best_cost);
+                    r
                 })
             })
             .collect();

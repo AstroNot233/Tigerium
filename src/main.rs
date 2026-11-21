@@ -248,7 +248,7 @@ fn main() {
                     cfg.steps,
                     cfg.t0,
                     cfg.t1,
-                    cfg.seed + r as u64 * 7919,
+                    cfg.seed + (r as u64) * (cfg.threads.max(1) as u64) * 7919,
                     cfg.threads,
                     cfg.moves,
                 );
