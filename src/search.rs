@@ -201,3 +201,39 @@ pub fn sanitize(lay: &mut Layout, cfg: &crate::config::Config) {
         eprintln!("布局修正：{moved} 根因禁用键被迁走");
     }
 }
+/// 多线程岛屿退火：N 条链各自独立跑，取最优。
+///
+/// 每条链有自己的 Evaluator（统计数组约 27 MB），互不共享可变状态；
+/// 代价是同时跑很多条会挤占内存带宽，实测加速比低于核数。
+pub fn anneal_parallel(
+    data: &crate::data::Data,
+    cfg: &crate::config::Config,
+    forced: &[crate::data::Forced],
+    start: &Layout,
+    steps: usize,
+    t0: f64,
+    t1: f64,
+    seed: u64,
+    threads: usize,
+    moves: [f64; 6],
+) -> AnnealResult {
+    if threads <= 1 {
+        let mut ev = Evaluator::new(data, cfg, forced);
+        return anneal(&mut ev, start.clone(), steps, t0, t1, seed, moves);
+    }
+    let results: Vec<AnnealResult> = std::thread::scope(|scope| {
+        let handles: Vec<_> = (0..threads)
+            .map(|i| {
+                scope.spawn(move || {
+                    let mut ev = Evaluator::new(data, cfg, forced);
+                    anneal(&mut ev, start.clone(), steps, t0, t1, seed + i as u64 * 7919, moves)
+                })
+            })
+            .collect();
+        handles.into_iter().map(|h| h.join().unwrap()).collect()
+    });
+    results
+        .into_iter()
+        .min_by(|a, b| a.best_cost.partial_cmp(&b.best_cost).unwrap())
+        .unwrap()
+}

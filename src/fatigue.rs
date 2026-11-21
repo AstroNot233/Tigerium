@@ -26,19 +26,22 @@ pub fn pair_cost(a: usize, b: usize, cfg: &Config) -> f64 {
     let (rb, cb) = (row(b), col(b));
     let e = &cfg.ergo;
 
-    // 同键：不计（双击不算坏）
+    // 同键不算坏，但也不等于互击：仍要付「没有互击」那份钱，只是不加跨排费用
     if a == b {
-        return if finger(ca) == 0 { e.pinky } else { 0.0 };
+        return if finger(ca) == 0 { e.alt + e.pinky } else { e.alt };
     }
 
     let mut c = 0.0;
-    if hand(ca) != hand(cb) {
-        c -= e.alt; // 互击奖励
-    } else if finger(ca) == finger(cb) {
-        if (ra as i32 - rb as i32).abs() >= 2 {
-            c += e.same_big;
-        } else {
-            c += e.same_small;
+    // 不互击就付钱（而不是互击给钱）：一简没有相邻键，不该因此吃亏，
+    // 也不会出现「把高频字拉长成 fgfg 去多吃几次奖励」这种占便宜
+    if hand(ca) == hand(cb) {
+        c += e.alt;
+        if finger(ca) == finger(cb) {
+            if (ra as i32 - rb as i32).abs() >= 2 {
+                c += e.same_big;
+            } else {
+                c += e.same_small;
+            }
         }
     }
     if finger(ca) == 0 || finger(cb) == 0 {

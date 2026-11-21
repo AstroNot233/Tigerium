@@ -198,7 +198,8 @@ impl<'a> Evaluator<'a> {
     pub fn evaluate(&mut self, lay: &Layout) -> Metrics {
         let cfg = self.cfg;
         let kb = &self.kb;
-        let mut st = std::mem::replace(&mut self.stats, CodeStats::new());
+        // 直接把 stats 借出来用，绝不重新分配（每次评估重新分配 28MB 会让多线程彻底失去意义）
+        let st = &mut self.stats;
         st.reset();
         for &id in &self.forced_ids {
             let i = id as usize;
@@ -406,7 +407,6 @@ impl<'a> Evaluator<'a> {
                 sel += wt * cfg.p1 * (1.0 - wt / st.wsum[i]);
             }
         }
-        self.stats = st;
         Metrics {
             cost: (key_sum + topsum + sel + cfg.fatigue_weight * fat_sum) / self.total_w,
             top: topsum / self.total_w,

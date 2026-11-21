@@ -48,6 +48,8 @@ pub struct Config {
     pub steps: usize,
     /// 重升温轮数（每轮从上一轮最优出发、温度重新拉高）
     pub rounds: usize,
+    /// 每轮并行跑几条独立链（取最优）；1 = 单线程
+    pub threads: usize,
     pub seed: u64,
 }
 
@@ -101,6 +103,7 @@ impl Default for Config {
             t1: 1e-5,
             steps: 400_000,
             rounds: 1,
+            threads: 8,
             seed: 1,
         }
     }

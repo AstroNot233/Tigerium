@@ -45,6 +45,7 @@ fn usage() {
   --seed <数>       随机种子
   --steps <数>      每轮退火步数
   --rounds <数>     重升温轮数
+  --threads <数>    每轮并行几条独立链（默认 1）
   --corpus <文件>   语料字频（可重复），用于 compare
   --rime <文件>     export 时额外写出 Rime 码表
   --p1/--p2 <数>    选重罚（覆盖配置）
@@ -118,6 +119,11 @@ fn main() {
             }
             "--rounds" => {
                 cfg.rounds = args[i + 1].parse().unwrap();
+                i += 2;
+            }
+            "--threads" => {
+                cfg.threads = args[i + 1].parse().unwrap();
+                cfg.threads = cfg.threads.max(1);
                 i += 2;
             }
             "--p1" => {
@@ -219,27 +225,31 @@ fn main() {
                 corpus::eval_file(&ev, &start, c);
             }
             eprintln!("初值：费用 {:.4} 码长 {:.4}", m0.cost, m0.len);
-            // 多轮重升温：每轮从上一轮最优的布局出发，温度重新拉高
-            let mut cur = start;
-            let mut res = search::anneal(
-                &mut ev,
-                cur.clone(),
+            // 多轮重升温；每轮内可用多线程跑若干条独立链，取最优
+            let mut res = search::anneal_parallel(
+                &data,
+                &cfg,
+                &forced,
+                &start,
                 cfg.steps,
                 cfg.t0,
                 cfg.t1,
                 cfg.seed,
+                cfg.threads,
                 cfg.moves,
             );
             for r in 1..cfg.rounds {
                 eprintln!("第 {r} 轮重升温（起点 {:.4}）", res.best_cost);
-                cur = res.best.clone();
-                let again = search::anneal(
-                    &mut ev,
-                    cur,
+                let again = search::anneal_parallel(
+                    &data,
+                    &cfg,
+                    &forced,
+                    &res.best,
                     cfg.steps,
                     cfg.t0,
                     cfg.t1,
                     cfg.seed + r as u64 * 7919,
+                    cfg.threads,
                     cfg.moves,
                 );
                 if again.best_cost < res.best_cost {
