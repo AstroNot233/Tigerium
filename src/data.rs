@@ -40,7 +40,7 @@ impl Data {
         let roots = load_roots(&paths.roots);
         let (weights, full_codes) = load_weights(&paths.weights);
         let splits = load_splits(&paths.splits);
-        let glyph2root = group_glyphs(&roots, &splits, &full_codes, paths.nfkc.as_deref());
+        let glyph2root = group_glyphs(&roots, &splits, &full_codes);
         let l1 = paths.level1.as_deref().map(load_charset).unwrap_or_default();
         let l2 = paths.level2.as_deref().map(load_charset).unwrap_or_default();
         let l3 = paths.level3.as_deref().map(load_charset).unwrap_or_default();
@@ -189,7 +189,6 @@ fn group_glyphs(
     roots: &[Root],
     splits: &[(char, Vec<char>)],
     full_codes: &HashMap<char, Vec<String>>,
-    nfkc_path: Option<&str>,
 ) -> HashMap<char, u16> {
     let mut map: HashMap<char, u16> = HashMap::new();
     for (id, r) in roots.iter().enumerate() {
@@ -199,20 +198,6 @@ fn group_glyphs(
     }
     let exact = map.len();
 
-    // NFKC：康熙部首、兼容汉字等归一化后若命中官方字形，即并入该根
-    let nfkc_text = nfkc_path.map(read_opt).unwrap_or_default();
-    for line in nfkc_text.lines() {
-        let f: Vec<&str> = line.split('\t').collect();
-        if f.len() < 2 || f[0] == f[1] {
-            continue;
-        }
-        if let (Some(tok), Some(id)) = (f[0].chars().next(), map.get(&f[1].chars().next().unwrap()).copied()) {
-            if !map.contains_key(&tok) {
-                map.insert(tok, id);
-            }
-        }
-    }
-    let after_nfkc = map.len();
 
     // 码对反推：按「根数 / 全码长度」的规则给每个拆分字形投票
     let mut vote_b: HashMap<char, HashMap<char, usize>> = HashMap::new();
@@ -287,6 +272,16 @@ fn group_glyphs(
         if let (Some(b), Some(s)) = (best(&vote_b, *t), best(&vote_s, *t)) {
             let key: String = [b, s].iter().collect();
             if let Some(&id) = code2root.get(&key) {
+                eprintln!(
+                    "  反推 {} U+{:04X} → 根 {}（码对 {}｜大码票 {:?} 小码票 {:?}｜根内字形 {}）",
+                    t,
+                    *t as u32,
+                    id,
+                    key,
+                    best(&vote_b, *t),
+                    best(&vote_s, *t),
+                    roots[id as usize].glyphs.iter().collect::<String>()
+                );
                 map.insert(*t, id);
                 by_code += 1;
             }
@@ -329,7 +324,7 @@ fn group_glyphs(
     }
 
     println!(
-        "字形归并：官方 {exact}，NFKC 后 {after_nfkc}，码对反推 +{by_code}，兜底 {fallback}，合计 {}（拆分字形 {}）",
+        "字形归并：根表字形 {exact}，码对反推 +{by_code}，兜底 {fallback}，合计 {}（拆分字形 {}）",
         map.len(),
         tokens.len()
     );

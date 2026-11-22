@@ -18,7 +18,7 @@ tigerium optimize --config config/default.toml --config profiles/tiger.toml \
 | 拆分 | `字<TAB>拆分字形串` | 每字一行，拆分串里每个字符是一个字形 |
 | 字频 | Rime 风格 `字<TAB>码<TAB>权` 或纯 `字<TAB>权` | 三列/两列自动识别；权重越大越常用 |
 
-可选：`nfkc`（字形归一化）、`forced`（强制占位，如标点）、`level1/2/3`（简码资格字表）。
+可选：`forced`（强制占位，如标点）、`level1/2/3`（简码资格字表）。
 
 ## 新增一个 profile
 

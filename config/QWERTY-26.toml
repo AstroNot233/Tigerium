@@ -106,7 +106,6 @@ row2 = ['z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/']
 roots = "data/roots.tsv"
 splits = "data/拆分方案.txt"
 weights = "data/原码编码.yaml"
-nfkc = "data/nfkc.tsv"
 forced = "data/forced.tsv"
 level1 = "std/level-1.txt"
 level2 = "std/level-2.txt"

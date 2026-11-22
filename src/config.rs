@@ -214,8 +214,6 @@ pub struct DataPaths {
     pub splits: String,
     /// 字频表：Rime 风格 `字<TAB>码<TAB>权` 或纯 `字<TAB>权`
     pub weights: String,
-    /// 可选：字形归一化（`原字形<TAB>目标字形`）
-    pub nfkc: Option<String>,
     /// 可选：强制占位（`码<TAB>输出`）
     pub forced: Option<String>,
     /// 可选：简码资格字表（一级 / 二级 / 三级）
@@ -230,7 +228,6 @@ impl Default for DataPaths {
             roots: "data/roots.tsv".into(),
             splits: "data/拆分方案.txt".into(),
             weights: "data/原码编码.yaml".into(),
-            nfkc: Some("data/nfkc.tsv".into()),
             forced: Some("data/forced.tsv".into()),
             level1: Some("std/level-1.txt".into()),
             level2: Some("std/level-2.txt".into()),
@@ -359,7 +356,6 @@ struct RawData {
     roots: Option<String>,
     splits: Option<String>,
     weights: Option<String>,
-    nfkc: Option<String>,
     forced: Option<String>,
     level1: Option<String>,
     level2: Option<String>,
@@ -485,7 +481,6 @@ impl Raw {
             if let Some(v) = &x.roots { c.data.roots = v.clone(); }
             if let Some(v) = &x.splits { c.data.splits = v.clone(); }
             if let Some(v) = &x.weights { c.data.weights = v.clone(); }
-            c.data.nfkc = x.nfkc.clone().or(c.data.nfkc.take());
             c.data.forced = x.forced.clone().or(c.data.forced.take());
             c.data.level1 = x.level1.clone().or(c.data.level1.take());
             c.data.level2 = x.level2.clone().or(c.data.level2.take());
